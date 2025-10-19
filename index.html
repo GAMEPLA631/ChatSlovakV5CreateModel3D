@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0f172a', // Slate-900
+                        'dark-card': '#1e293b', // Slate-800
+                        'dark-accent': '#ef4444', // Red-500
+                        'code-bg': '#020617', // Slate-950
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Consolas', 'Monaco', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        .chat-container {
+            height: 70vh;
+            max-height: 800px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg text-gray-100 font-sans min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-6 text-dark-accent tracking-wider">
+            ChatSlovak V5 Create Model 3D
+        </h1>
+        <p class="text-center text-gray-400 mb-8">
+            Povedz mi, akú pokročilú, bizarnú, alebo desivú entitu mám vytvoriť (napr. "Vytvor obrovské lietajúce oko s chápadlami", alebo "Generuj mapu opusteného labyrintu").
+        </p>
+
+        <!-- Chat Area -->
+        <div id="chat-messages" class="chat-container bg-dark-card rounded-lg shadow-xl p-4 mb-6 border border-dark-accent/30">
+            <!-- Initial AI message -->
+            <div class="flex justify-start mb-4">
+                <div class="bg-dark-accent/20 text-gray-200 p-3 rounded-xl rounded-tl-none max-w-3/4 shadow-md border-l-4 border-dark-accent">
+                    <p class="font-bold text-dark-accent">Bizarre Builder AI:</p>
+                    <p>Som pripravený oživiť tvoje najdivokejšie nočné mory v Roblox Studio. Popíš mi, aké bizarné, pokročilé alebo strašidelné NPC či mapu mám vytvoriť. **Vygenerujem len čistý Lua kód!**</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="flex space-x-3">
+            <input type="text" id="user-input" placeholder="Popíš model, ktorý chceš vygenerovať (napr. Desivý humanoid s 8 končatinami)..."
+                   class="flex-grow p-3 rounded-lg bg-dark-card border border-dark-accent/50 focus:border-dark-accent focus:ring focus:ring-dark-accent/30 text-white placeholder-gray-500 transition duration-200"
+                   onkeydown="if(event.key === 'Enter') sendMessage()">
+            <button id="send-button" onclick="sendMessage()"
+                    class="px-6 py-3 bg-dark-accent text-white font-semibold rounded-lg shadow-lg hover:bg-red-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Generovať
+            </button>
+        </div>
+    </div>
+
+    <!-- Modals and Hidden Elements -->
+    <div id="loading-indicator" class="fixed inset-0 bg-dark-bg/80 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="text-center p-6 bg-dark-card rounded-xl shadow-2xl border-t-4 border-dark-accent">
+            <svg class="animate-spin h-8 w-8 text-dark-accent mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-xl font-semibold">Generujem bizarný kód...</p>
+            <p class="text-sm text-gray-400">Trvá to pár sekúnd, kód bude veľmi komplexný.</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase-like constants required by the environment (used for setup boilerplate)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const CHAT_MESSAGES_DIV = document.getElementById('chat-messages');
+        const USER_INPUT = document.getElementById('user-input');
+        const SEND_BUTTON = document.getElementById('send-button');
+        const LOADING_INDICATOR = document.getElementById('loading-indicator');
+        const API_KEY = "AIzaSyDdiCiIfr2gLtsRMENBkWG1hJo6N1uij7w"; // Canvas provides this automatically
+
+        const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+        
+        // Custom System Instruction
+        const SYSTEM_PROMPT = `You are a 'Bizarre Builder' AI. Your sole function is to generate LUA code for the Roblox Studio Command Bar. The code must create extremely advanced, bizarre, and terrifying 3D models (maps, NPCs, or humanoids) using Roblox Lua API commands (like Instance.new(), CFrame, properties, etc.). The creation must be self-contained in the script. DO NOT include any explanatory text, markdown formatting (like \`\`\`lua\`), or conversation. Output ONLY the raw, executable LUA code. Focus on surreal, nightmarish, and highly detailed constructs. Use a mix of Parts, MeshParts, and other relevant instances.`;
+
+
+        /**
+         * Adds a message to the chat interface.
+         * @param {string} content - The message content.
+         * @param {string} sender - 'user' or 'ai'.
+         */
+        function addMessage(content, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('flex', 'mb-4');
+
+            if (sender === 'user') {
+                messageDiv.classList.add('justify-end');
+                messageDiv.innerHTML = `
+                    <div class="bg-blue-600/70 text-white p-3 rounded-xl rounded-tr-none max-w-3/4 shadow-md">
+                        <p class="font-semibold">Ty:</p>
+                        <p>${content}</p>
+                    </div>
+                `;
+            } else {
+                // AI Message - Contains the Lua Code
+                messageDiv.classList.add('justify-start');
+                messageDiv.innerHTML = `
+                    <div class="bg-dark-accent/20 text-gray-200 p-3 rounded-xl rounded-tl-none max-w-full shadow-lg border-l-4 border-dark-accent">
+                        <p class="font-bold text-dark-accent mb-2">Vygenerovaný Kód:</p>
+                        <div class="bg-code-bg p-3 rounded-lg overflow-x-auto font-mono text-sm text-lime-400">
+                            <pre id="code-${Date.now()}" style="white-space: pre-wrap; word-wrap: break-word;">${content}</pre>
+                        </div>
+                        <button onclick="copyCode(this)" data-code-id="code-${Date.now()}"
+                                class="mt-3 px-4 py-2 bg-dark-accent text-white font-semibold rounded-lg text-xs hover:bg-red-600 transition duration-200">
+                            Kopírovať do Command Bar (Skopírované)
+                        </button>
+                    </div>
+                `;
+            }
+
+            CHAT_MESSAGES_DIV.appendChild(messageDiv);
+            // Scroll to the latest message
+            CHAT_MESSAGES_DIV.scrollTop = CHAT_MESSAGES_DIV.scrollHeight;
+        }
+
+        // Global function for copying code (needs to be attached to window)
+        window.copyCode = function(button) {
+            const codeId = button.getAttribute('data-code-id');
+            const codeElement = document.getElementById(codeId);
+            const codeText = codeElement.textContent;
+
+            // Use document.execCommand('copy') for compatibility in this environment
+            const textarea = document.createElement('textarea');
+            textarea.value = codeText;
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                button.textContent = "Kopírovať do Command Bar (SKOPÍROVANÉ!)";
+                button.classList.add('bg-green-700');
+                button.classList.remove('bg-dark-accent');
+                setTimeout(() => {
+                    button.textContent = "Kopírovať do Command Bar (Skopírované)";
+                    button.classList.remove('bg-green-700');
+                    button.classList.add('bg-dark-accent');
+                }, 2000);
+            } catch (err) {
+                console.error('Nepodarilo sa skopírovať kód:', err);
+                button.textContent = "Chyba kopírovania!";
+            }
+            document.body.removeChild(textarea);
+        }
+
+        /**
+         * Main function to handle user message and API call.
+         */
+        window.sendMessage = async function() {
+            const userQuery = USER_INPUT.value.trim();
+            if (!userQuery) return;
+
+            // 1. Display user message
+            addMessage(userQuery, 'user');
+            USER_INPUT.value = '';
+            
+            // Disable input and show loading
+            SEND_BUTTON.disabled = true;
+            USER_INPUT.disabled = true;
+            LOADING_INDICATOR.classList.remove('hidden');
+            LOADING_INDICATOR.classList.add('flex');
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            };
+
+            const maxRetries = 5;
+            let attempt = 0;
+
+            while (attempt < maxRetries) {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429) { // Rate limit
+                            throw new Error('Rate limit exceeded. Retrying.');
+                        }
+                        const errorData = await response.json();
+                        throw new Error(`API Error: ${response.status} - ${JSON.stringify(errorData)}`);
+                    }
+
+                    const result = await response.json();
+                    const aiCode = result.candidates?.[0]?.content?.parts?.[0]?.text || "Nepodarilo sa vygenerovať kód. Skús to prosím preformulovať.";
+                    
+                    // 2. Display AI Code
+                    addMessage(aiCode, 'ai');
+
+                    // Exit the retry loop on success
+                    break; 
+
+                } catch (error) {
+                    console.error(`Attempt ${attempt + 1} failed:`, error.message);
+                    attempt++;
+                    if (attempt < maxRetries) {
+                        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000; // Exponential backoff
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        // 2. Display final error message
+                        addMessage("Ľutujem, AI Generátor kódu momentálne nefunguje. Skús to neskôr, alebo zmeň požiadavku.", 'ai');
+                    }
+                }
+            }
+
+            // Re-enable input and hide loading
+            SEND_BUTTON.disabled = false;
+            USER_INPUT.disabled = false;
+            LOADING_INDICATOR.classList.add('hidden');
+            LOADING_INDICATOR.classList.remove('flex');
+            USER_INPUT.focus();
+        }
+
+    </script>
+</body>
+</html>
