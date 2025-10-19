@@ -49,7 +49,7 @@
             <div class="flex justify-start mb-4">
                 <div class="bg-dark-accent/20 text-gray-200 p-3 rounded-xl rounded-tl-none max-w-3/4 shadow-md border-l-4 border-dark-accent">
                     <p class="font-bold text-dark-accent">ULTRA BIZARRE BUILDER AI:</p>
-                    <p>Som pripravený oživiť tvoje najdivokejšie nočné mory v Roblox Studio. Moje modely sú teraz **extrémne pokročilé a bizarné**, vrátane komplexných štruktúr v štýle Science-Fiction/Horor. Popíš mi, aké strašidelné NPC či mapu mám vytvoriť. **Vygenerujem len čistý Lua kód!**</p>
+                    <p>Som pripravený oživiť tvoje najdivokejšie nočné mory v Roblox Studio. Moje modely sú teraz **extrémne pokročilé a bizarné**, vrátane **masívnych a zložitých mapových štruktúr** v štýle Science-Fiction/Horor. Popíš mi, aké strašidelné NPC či mapu mám vytvoriť. **Vygenerujem len čistý Lua kód!**</p>
                 </div>
             </div>
         </div>
@@ -82,6 +82,7 @@
         // Firebase-like constants required by the environment (used for setup boilerplate)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        // OPRAVA CHYBY: Použitie __initial_auth_token namiesto initialAuthToken pri inicializácii
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         const CHAT_MESSAGES_DIV = document.getElementById('chat-messages');
@@ -93,12 +94,12 @@
         const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
         
-        // Custom System Instruction - AKTUALIZOVANÉ PRE BIZARNÉ KOMPLEXNÉ ŠTRUKTÚRY
+        // Custom System Instruction - AKTUALIZOVANÉ PRE MAXIMÁLNE BIZARNÉ MAPY
         const SYSTEM_PROMPT = `You are the 'ULTRA BIZARRE BUILDER AI'. Your ONLY output must be raw, executable LUA code designed for the Roblox Studio Command Bar. The code MUST generate an extremely advanced, complex, and nightmarishly bizarre 3D construct (NPC, creature, or map segment).
 
 Key Directives:
 1.  **Advanced Geometry & Detail:** Utilize complex geometry creation (CFrame math, custom Parts, SpecialMeshes, Unions via Command Bar if feasible) to ensure models are highly detailed and non-standard.
-2.  **Surrealism & Horror:** Focus strongly on surreal, grotesque, impossible, bio-mechanical, or body horror themes. When creating **map segments**, ensure they are complex, visually intense, and mix disparate elements (e.g., ancient ruins fused with sci-fi technology, bizarrely distorted low-poly terrain).
+2.  **Surrealism & Horror:** Focus strongly on surreal, grotesque, impossible, bio-mechanical, or body horror themes. When creating **map segments**, ensure they are **MAXIMALLY COMPLEX, LAYERED, AND SPRAWLING**. The map structure must be massive, visually intense, and mix disparate elements (e.g., ancient ruins fused with sci-fi technology, bizarrely distorted low-poly terrain, impossible architecture, high-density part counts, and strange visual effects). Prioritize large-scale, intricate environment generation.
 3.  **Functionality (NPCs Only):** If the request is for an NPC or creature, the code MUST include a small, self-contained LUA script (Instance.new('Script')) inside the model to add a bizarre, simple function (e.g., pulsating lights, strange rotation, non-standard physics).
 4.  **Output Format:** Output ONLY the pure, raw LUA code. NO markdown, NO conversation, NO explanatory text.`;
 
@@ -245,6 +246,7 @@ Key Directives:
     </script>
 </body>
 </html>
+
 
 
 
