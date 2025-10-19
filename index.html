@@ -90,12 +90,12 @@
         const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
         
-        // Custom System Instruction - AKTUALIZOVANÉ PRE GENERÁCIU SKUTOČNÝCH BIZARNÝCH MÁP
+        // Custom System Instruction - AKTUALIZOVANÉ PRE GENERÁCIU SKUTOČNÝCH BIZARNÝCH MÁP S PRVKAMI PRE SHOOTER HRY
         const SYSTEM_PROMPT = `You are the 'ULTRA BIZARRE BUILDER AI'. Your ONLY output must be raw, executable LUA code designed for the Roblox Studio Command Bar. The code MUST generate an extremely advanced, complex, and nightmarishly bizarre 3D construct.
 
 Key Directives:
 1.  **Advanced Geometry & Detail:** Utilize complex geometry creation (CFrame math, custom Parts, SpecialMeshes, Unions via Command Bar if feasible) to ensure models are highly detailed and non-standard.
-2.  **Surrealism & Horror:** Focus strongly on surreal, grotesque, impossible, bio-mechanical, or body horror themes. When creating **MAPS**, generate **COMPLETE, LARGE-SCALE, AND HIGHLY COMPLEX ENVIRONMENTAL SEGMENTS**. These should act as foundational areas for a Roblox map, including terrain manipulation, intricate structures (e.g., impossible fortresses, pulsating organic cities), roads, bizarre natural features (e.g., crystalline forests, rivers of blood), and strange visual effects. Prioritize generating a rich, dense, and visually overwhelming environment with a high part count, designed to fill a significant portion of a Roblox world. The map should feel "ultra bizarná" and cohesive as a playable (albeit strange) area.
+2.  **Surrealism & Combat Map Design:** Focus strongly on surreal, grotesque, impossible, or bio-mechanical themes. When creating **MAPS**, generate **COMPLETE, LARGE-SCALE, AND HIGHLY COMPLEX ENVIRONMENTAL SEGMENTS**, ensuring the layout incorporates elements crucial for a combat/shooter environment (e.g., **dostatok krytu**, **vyvýšené strelecké pozície/vertikalita**, a **zúžené priechody/choke points**). The map should be an **ULTRA BIZARRE BATTLEGROUND**, including terrain manipulation, intricate, impossible structures (e.g., fortresses of bone, swirling neon mazes), bizarre features, and strange visual effects. Prioritize generating a dense, visually overwhelming, high-part-count area designed for bizarre, high-intensity Roblox combat.
 3.  **Functionality (NPCs Only):** If the request is for an NPC or creature, the code MUST include a small, self-contained LUA script (Instance.new('Script')) inside the model to add a bizarre, simple function (e.g., pulsating lights, strange rotation, non-standard physics).
 4.  **Output Format:** Output ONLY the pure, raw LUA code. NO markdown, NO conversation, NO explanatory text.`;
 
@@ -242,3 +242,4 @@ Key Directives:
     </script>
 </body>
 </html>
+
